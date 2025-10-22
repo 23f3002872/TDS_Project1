@@ -99,7 +99,7 @@ def process_deployment_request(request_data: Dict[str, Any]):
             'task': task_id,
             'round': round_num,
             'nonce': nonce,
-            'repo_url': repo_url,
+            'repo_url': repo_url.replace('.git', ''),  # Remove .git suffix for evaluation
             'commit_sha': commit_sha,
             'pages_url': pages_url
         }
