@@ -59,41 +59,39 @@ def save_request_log(request_data: Dict[str, Any]) -> str:
 def decode_attachments(attachments: List[Dict[str, Any]], task_id: str) -> List[str]:
     """
     Decode base64 attachments and save to temporary files
-    
     Args:
         attachments: List of attachment objects with 'filename' and 'content' (base64)
         task_id: Task identifier for unique naming
-        
     Returns:
         List of file paths to decoded attachments
     """
     attachment_files = []
-    
+
     try:
         # Create temp directory for this task
         temp_dir = os.path.join(tempfile.gettempdir(), f"task_{task_id}")
         os.makedirs(temp_dir, exist_ok=True)
-        
+
         for i, attachment in enumerate(attachments):
             try:
                 # Get filename and content
                 filename = attachment.get('filename', f'attachment_{i}')
                 content_b64 = attachment.get('content', '')
-                
+
                 if not content_b64:
-                    logger.warning(f"Empty content for attachment {filename}")
+                    logger.warning(f"Empty content for attachment attachment_{i}")
                     continue
-                
+
                 # Decode base64 content
                 try:
                     content_bytes = base64.b64decode(content_b64)
                 except Exception as e:
-                    logger.error(f"Failed to decode base64 for {filename}: {str(e)}")
+                    logger.error(f"Failed to decode base64 for attachment_{i}: {str(e)}")
                     continue
-                
+
                 # Save to temporary file
                 file_path = os.path.join(temp_dir, filename)
-                
+
                 # Determine if content is text or binary
                 try:
                     # Try to decode as text first
@@ -104,16 +102,16 @@ def decode_attachments(attachments: List[Dict[str, Any]], task_id: str) -> List[
                     # Save as binary
                     with open(file_path, 'wb') as f:
                         f.write(content_bytes)
-                
+
                 attachment_files.append(file_path)
                 logger.info(f"Decoded attachment: {filename} -> {file_path}")
-                
+
             except Exception as e:
                 logger.error(f"Failed to process attachment {i}: {str(e)}")
                 continue
-        
+
         return attachment_files
-        
+
     except Exception as e:
         logger.error(f"Failed to decode attachments: {str(e)}")
         return []
