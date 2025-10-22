@@ -181,27 +181,49 @@ class GitHubDeployer:
     def _create_github_repo(self, repo_name: str, description: str) -> str:
         """Create a new GitHub repository using GitHub CLI"""
         try:
+            # Sanitize description to remove control characters and newlines
+            sanitized_description = self._sanitize_description(description)
+
             # Use GitHub CLI to create repository
             cmd = [
                 'gh', 'repo', 'create',
                 f"{self.github_owner}/{repo_name}",
                 '--public',
-                '--description', description[:100],
+                '--description', sanitized_description,
                 '--clone=false'
             ]
-            
+
             result = self._run_command(cmd)
-            
+
             if result.returncode != 0:
                 raise Exception(f"Failed to create repository: {result.stderr}")
-            
+
             repo_url = f"https://github.com/{self.github_owner}/{repo_name}.git"
             logger.info(f"Created repository: {repo_url}")
             return repo_url
-            
+
         except Exception as e:
             logger.error(f"Failed to create GitHub repository: {str(e)}")
             raise
+
+    def _sanitize_description(self, description: str) -> str:
+        """Sanitize repository description for GitHub"""
+        import re
+
+        # Remove control characters and newlines
+        sanitized = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', description)
+
+        # Replace multiple spaces with single space
+        sanitized = re.sub(r'\s+', ' ', sanitized)
+
+        # Limit to 100 characters and strip whitespace
+        sanitized = sanitized.strip()[:100]
+
+        # Ensure it's not empty
+        if not sanitized:
+            sanitized = "Auto-generated project"
+
+        return sanitized
     
     def _enable_github_pages(self, repo_name: str) -> str:
         """Enable GitHub Pages for the repository"""
