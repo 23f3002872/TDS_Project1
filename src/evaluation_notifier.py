@@ -81,6 +81,12 @@ class EvaluationNotifier:
                 elif response.status_code in [400, 401, 403, 404]:
                     # Client errors - don't retry
                     logger.error(f"Client error {response.status_code}, not retrying: {response.text}")
+                    # Log the response body for debugging
+                    try:
+                        error_data = response.json()
+                        logger.error(f"Error details: {json.dumps(error_data, indent=2)}")
+                    except:
+                        pass
                     return False
                 else:
                     # Server errors - retry
